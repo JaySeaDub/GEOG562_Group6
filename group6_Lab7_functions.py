@@ -1,6 +1,5 @@
 from arcpy.sa import *
 from arcpy import env
-import arcpy
 
 # arcpy workspace
 env.workspace = r'R:\GEOG562\Students\sharrm\Lab7\Lab7_ArcProject\Group6_Lab7.gdb'
@@ -15,13 +14,16 @@ landsat_raster = "Landsat2001_Band4"
 # Initiate a list to save statistics for each year
 disturb_list = []
 
+# Identify the years that we will iterate through to calclulate the means
 years = range(2002, 2013, 1)
 
+# Use a for loop to extract each applicable year from the Landsat Data, calcluate the statistics, and output to the disturb_list
 for year in years:
-    # create raster containing values for year of interest
-
+    
+    # Name the raster containing values for year of interest
     yearFileName = f'disturbance_{year}'  # Name the year's output file
 
+    # Check to see if the current year's raster file already exists, if not, create it.
     if not arcpy.Exists(yearFileName):
         dist_year = Con(Raster(disturbance_raster) == year, year)
         dist_year.save(yearFileName) # Save the output file
@@ -29,7 +31,7 @@ for year in years:
     # Calculate the mean value of the Band 4 pixels that overlap with the disturbance pixel for the current year
     Zonal_Statistics = yearFileName + '_statistics_table' # Name the output file
 
-    # Check to see if file already exists
+    # Check to see if the current year's zonal statistics file already exists. If not, create it, and if yes, identify the file as the statsFile.
     if not arcpy.Exists(Zonal_Statistics):
         statsFile = arcpy.ia.ZonalStatisticsAsTable(in_zone_data= Raster(yearFileName),
                                                     zone_field="Value",
@@ -40,8 +42,7 @@ for year in years:
                                                     process_as_multidimensional="CURRENT_SLICE",
                                                     percentile_values=[90],
                                                     percentile_interpolation_type="AUTO_DETECT")
-        # .save(Zonal_Statistics_as_Table)
-        #statsFile.save(Zonal_Statistics)
+
 
     else:
         statsFile = Zonal_Statistics
@@ -79,6 +80,7 @@ for dataset in datasetList:
           for row in cur:
              tableOfMeans.append(row)
 
+# Show the user what the statistics outputs are
 print(tableOfMeans)
 
 #create blank list and use for loop to grab just year and mean, append them to the blank list
@@ -95,12 +97,15 @@ meanAndYear = [str(x) for x in meanAndYear]
 #make variable as output textfile and write to that textfile using a for loop
 outfilename = 'lab7textfile.txt'
 
+# Open the new text file as writable
 output_file = open(outfilename, 'w')
 
+# Iterate through each variable in the list to write it out to the new file
 for values in meanAndYear:
     output_file.write(values + "\n")
 
 #close textfile and make a print statement saying where the file is.
 output_file.close()
 
+# Tell the user what the new file is named
 print(f'The file can be found at {outfilename}')
